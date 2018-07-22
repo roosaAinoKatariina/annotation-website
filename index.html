@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>PB_50_documents</title>
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <link rel="stylesheet" href="index.css">
+    <script defer src="https://unpkg.com/vue"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/vue-resource"></script>
+    <script defer src="app.js"></script>
+  </head>
+  <body>
+    <div class="wrapper container pt-4" id="app">
+      <div class="page" v-if="active_page === 1" :class="{page_active: active_page === 1, page_left: active_page > 1}" id="instructions">
+
+        <h1>Annotointitehtävä</h1>
+
+        <p>
+          Tälle sivulle on poimittu satunnaisesti 75 tekstiä Finnish Internet Parsebankista. Parsebank on massiivinen, tekoälyn avulla morfologisesti ja syntaktisesti
+          annotoitu kielikorpus, joka koostuu suomenkielisiltä verkkosivuilta poimituista teksteistä. Eräs Parsebankin tavoitteista on luokitella
+          sen sisältämät tekstit mielekkäisiin alakategorioihin. Yhdysvaltalainen lingvisti Douglas Biber on esittänyt Internet-genrejen taksonomian,
+          jota käytämme tämän tehtävän runkona. Antamiasi vastauksia käytetään apuna, jotta voidaan arvioida Biberin taksonomian soveltuvuutta Parsebankin luokittelussa.
+        </p>
+        <p>
+          Lisätietoa Parsebankista: <a href="http://bionlp.utu.fi/finnish-internet-parsebank.html">http://bionlp.utu.fi/finnish-internet-parsebank.html</a>
+        </p>
+        <p>
+          Kirjoita aluksi nimesi muodossa Sukunimi Etunimi alempana olevaan
+          kenttään. Tarkastele sitten jokaista tekstiä, ja valitse kullekin mielestäsi <b>parhaiten kuvaava rekisteri/genre</b>
+          ensimmäisestä (=vasemmasta, tai ylimmästä jos selainikkunasi koko on skaalattu hyvin kapeaksi) pudotusvalikosta. Jokaisen tekstin
+          URL-bodyurl on annettu; voit lisäkontekstia halutessasi vilkaista, onko alkuperäinen verkkosivu vielä olemassa Internetissä.
+          Esimerkiksi keskustelufoorumi-tyyppisten tekstien alkuperäinen asettelu verkkosivulla on Parsebankiin tallennuksen yhteydessä usein hävinnyt.
+        </p>
+        <p>
+          Jos teksti vaikuttaa selvästi sopivan kahteen eri rekisteriin, voit valita lisärekisterin toisesta pudotusvalikosta.
+        </p>
+        <p>
+          Jos tekstin rekisterin tunnistamisessa on huomattavaa epäselvyyttä, tai teksti tuntuu sopivan useaan eri kategoriaan,
+          klikkaa Epävarma-valintaruutua. Valitse tässäkin tapauksessa tekstille jokin rekisteri; tärkeintä on, että valittu rekisteri
+          kuvaa tekstiä edes jollain tavalla. Muista, että tämä luokittelumalli ei suinkaan ole täydellinen! Yhtenä päämääränä onkin juuri selvittää,
+          mistä annotoijat ovat eri mieltä.
+        </p>
+        <p>
+          Kun olet annotoinut kaikki tekstit, tarkista että kirjoitit nimesi laatikkoon ja sulje verkkosivu. Vastauksesi tallentuvat automaattisesti.
+        </p>
+        <p>
+          Hauskaa annotointia!
+        </p>
+
+        <input type="text" v-model="username" class="form-control mb-3" placeholder="Oma nimi">
+        <div class="btn btn-primary" @click="checkUser">Seuraava</div>
+      </div>
+
+      <div class="page" v-if="active_page === 2" :class="{page_active: active_page === 2, page_right: active_page > 2, page_left: active_page < 2}">
+        <div class="text_wrapper" v-for="text in texts">
+          <div class="row mb-2">
+            <div class="col-3 doc_id">Document ID: {{text.body.doc_id}} </div>
+            <div class="col-3 doc_id">ID: {{text.body.id}} </div>
+            <div class="col-3 url text-right"> {{text.text_url}} </div>
+          </div>
+          {{text.body.text}}
+          <div class="document_footer mt-4">
+            <div class="select_wrapper">
+              
+              <dropdown :docid="text.doc_id" :bodyurl="text.text_url" :old-value="values[text.text_id]" :category_index="1" :data="choices" :index="text.text_id" v-on:data="handleData"></dropdown>
+              <dropdown :docid="text.doc_id" :bodyurl="text.text_url" :old-value="values[text.text_id]" :category_index="2" :data="choices" :index="text.text_id" v-on:data="handleData"></dropdown>
+              
+            </div>
+
+            <div class="button_wrapper">
+              <unclear-checkbox :key="unclear" v-bind:index="text.text_id" v-on:data="handleData" v-bind:old-value="values[text.text_id]"></unclear-checkbox>
+              <label>Epävarma</label>
+            </div>
+            <div class="button_wrapper">
+                <comments-checkbox :key="comments" v-bind:index="text.text_id" v-on:data="handleData" v-bind:old-value="values[text.text_id]"></comments-checkbox>
+                <label>Many comments</label>
+              </div>
+             <div>{{text.text_id}}</div>
+
+          </div>
+        </div>
+        <div class="btn btn-primary mb-4" @click="finish">Seuraava</div>
+      </div>
+      <div class="page" v-if="active_page === 3" :class="{page_active: active_page === 3, page_right: active_page < 3}" id="remembername">
+        <p>Valmis! Tarkista vielä, että vastasit kaikkiin kohtiin ja kirjoitit alussa nimesi, ja sulje sivu.</p>
+        <p><h2>Kiitos! 🙏</h2></p>
+      </div>
+    </div>
+  </body>
+</html>
